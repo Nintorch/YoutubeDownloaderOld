@@ -6,13 +6,12 @@ import os
 import pyffmpeg
 from threading import Thread
 
+# Initialize PyGame
 pygame.init()
 
-FFmpeg = pyffmpeg.FFmpeg()
-
+# Initialize window
 pygame.display.set_caption("YouTube Downloader")
 screen = pygame.display.set_mode((450, 130))
-clock = pygame.time.Clock()
 
 font = pygame.font.SysFont("Arial", 16)
 
@@ -27,30 +26,49 @@ MainUI.blit(text, (450 / 2 - text.get_width() / 2, 0))
 text = font.render("Put YouTube video URL here:", True, (100, 100, 100))
 MainUI.blit(text, (20 + 300 / 2 - text.get_width() / 2, 20))
 
+# PyGame GUI Manager
 manager = pygame_gui.UIManager(pygame.display.get_window_size())
-search_box = pygame_gui.elements.UITextEntryLine(pygame.Rect(20, 40, 300, 30), manager)
-resolution_box = pygame_gui.elements.UIDropDownMenu(["360p", "480p", "720p", "1080p"], "360p", pygame.Rect(330, 42, 100, 22),
+
+# PyGame GUI Elements
+
+# YouTube video URL should be specified here
+url_box = pygame_gui.elements.UITextEntryLine(pygame.Rect(20, 40, 300, 30), manager)
+# Specify resolution for video download
+resolution_box = pygame_gui.elements.UIDropDownMenu(["360p", "480p", "720p", "1080p"], "360p",
+                                                    pygame.Rect(330, 42, 100, 22),
                                                     manager)
 
+# Downloading buttons
 download_video = pygame_gui.elements.UIButton(pygame.Rect(60, 75, 150, 30), "Download Video", manager)
 download_audio = pygame_gui.elements.UIButton(pygame.Rect(450 - 60 - 150, 75, 150, 30), "Download Audio", manager)
 
+# Progress bar
 download_progressbar = pygame_gui.elements.UIScreenSpaceHealthBar(pygame.Rect(20, 110, 450 - 20 * 2, 10), manager)
 
+# FFmpeg object for converting between audio formats
+FFmpeg = pyffmpeg.FFmpeg()
 
+# PyGame Clock object for framerate control
+clock = pygame.time.Clock()
+
+
+# Set progress bar position
 def set_progress(prog: float):
     download_progressbar.health_percentage = prog
     download_progressbar.current_health = int(download_progressbar.health_percentage * 100)
     download_progressbar.rebuild()
 
 
-set_progress(0)
+set_progress(0)  # Initialize progress bar
 
+# Main program loop
 time = 0
 running = True
 download_thread = 0
 while running:
+    # Delta time for PyGame GUI
     delta_time = clock.tick(60) / 1000.0
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -59,7 +77,7 @@ while running:
             # UI button was pressed
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 # check if there's something in search box
-                if search_box.get_text():
+                if url_box.get_text():
 
                     def progress(stream, chunk, bytes_remaining):
                         global download_progressbar
@@ -69,14 +87,18 @@ while running:
                         set_progress(float(size - bytes_remaining) / float(size))
 
 
-                    yt = YouTube(search_box.get_text())
+                    # Create YouTube video object
+                    yt = YouTube(url_box.get_text())
                     yt.register_on_progress_callback(progress)
 
                     set_progress(0)
 
+                    # If URL is valid
                     if yt:
+                        # Download video button was pressed
                         if event.ui_element == download_video:
                             path = filesavebox(title="Specify output path", default="output.mp4")
+
 
                             def download():
                                 try:
@@ -85,12 +107,13 @@ while running:
                                                       if resolution_box.selected_option else None)[0]. \
                                         download(output_path=os.path.dirname(path), filename=os.path.split(path)[-1])
                                 except Exception as e:
-                                    msgbox(str(e),"Error occured")
+                                    msgbox(str(e), "Error occured")
 
 
                             download_thread = Thread(target=download)
                             download_thread.start()
 
+                        # Download audio button was pressed
                         elif event.ui_element == download_audio:
                             path = filesavebox(title="Specify output path", filetypes=["*.ogg", "*.mp3"])
 
@@ -106,12 +129,19 @@ while running:
                             download_thread = Thread(target=download)
                             download_thread.start()
 
+        # (for PyGame GUI)
         manager.process_events(event)
 
     time += 1
     manager.update(delta_time)
 
+    # Blit main UI
     screen.blit(MainUI, (0, 0))
+    # Draw PyGame GUI elements
     manager.draw_ui(screen)
 
+    # Update window
     pygame.display.flip()
+
+# Shutdown PyGame
+pygame.quit()
