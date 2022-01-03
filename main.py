@@ -1,9 +1,19 @@
+# ------------------------------------------------------------------------
+# YouTube Downloader
+# by JustMe (JustMeCodes) 2022
+#
+# You can download any video or music by specifying YouTube URL
+# and pressing either "Download Video" or "Download Audio" buttons
+# You can also specify video resolution for video downloading
+# ------------------------------------------------------------------------
+
+# Importing needed libraries
 import pygame
 import pygame_gui
 from pytube import YouTube, Stream
 from easygui import filesavebox, msgbox
-import os
 import pyffmpeg
+import os
 from threading import Thread
 
 # Initialize PyGame
@@ -61,8 +71,10 @@ def set_progress(prog: float):
 
 set_progress(0)  # Initialize progress bar
 
+# ------------------------------------------------------------------------
 # Main program loop
-time = 0
+# ------------------------------------------------------------------------
+
 running = True
 download_thread = 0
 while running:
@@ -132,7 +144,6 @@ while running:
         # (for PyGame GUI)
         manager.process_events(event)
 
-    time += 1
     manager.update(delta_time)
 
     # Blit main UI
@@ -142,6 +153,10 @@ while running:
 
     # Update window
     pygame.display.flip()
+
+# ------------------------------------------------------------------------
+# Shutting down
+# ------------------------------------------------------------------------
 
 # Shutdown PyGame
 pygame.quit()
